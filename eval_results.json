@@ -1,0 +1,112 @@
+[
+  {
+    "id": "E01",
+    "query": "What are the main differences between transformer and RNN architectures?",
+    "expected_action": "RETRIEVE",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should retrieve relevant papers and explain key differences: attention mechanism, parallelism, long-range dependencies.",
+    "answer": "Based on the provided context, the main differences between transformer and RNN architectures are not explicitly discussed. However, based on common knowledge and the context's focus on transformer-related topics, it can be inferred that the question may not be directly related to the provided papers.\n\nSince the question does not match the context well (score < 0.65), I will provide a general answer. \n\nTransformer and RNN (Recurrent Neural Network) architectures differ fundamentally in their design and functionality. \n\n- RNNs are sequence models that use feedback connections to process sequences. They pass activations backwards, allowing the model to maintain a hidden state over time.\n\n- Transformers are parallelizable sequence models that leverage self-attention mechanics to focus on relevant parts of sequences. This design enables Transformers to process sequences more efficiently and capture long-range dependencies without relying on recurrence.\n\nThe context's focus on transformer-related topics (Large Language Models, Mixture-of-Experts, and self-distillation) suggests that the papers might explore advancements or applications within the transformer architecture itself.",
+    "top1_score": 0.69865286,
+    "latency_ms": 4039.6888256073,
+    "action_correct": true
+  },
+  {
+    "id": "E02",
+    "query": "How does chain-of-thought prompting improve LLM reasoning?",
+    "expected_action": "RETRIEVE",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should retrieve papers on CoT prompting and explain step-by-step reasoning benefits.",
+    "answer": "This question cannot be directly answered based on the given context, as it doesn't contain information about chain-of-thought prompting.",
+    "top1_score": 0.819703,
+    "latency_ms": 1637.848138809204,
+    "action_correct": true
+  },
+  {
+    "id": "E03",
+    "query": "What is retrieval-augmented generation and why is it useful?",
+    "expected_action": "RETRIEVE",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should retrieve RAG-related papers and explain grounding, reduced hallucination, knowledge updating.",
+    "answer": "Based on the context from corpus [1] \"Superintelligent Retrieval Agent: The Next Frontier of Information Retrieval\" retrieval-augmented generation refers to the task of generating evidence-rich responses by leveraging existing large knowledge bases. This approach is useful because it allows agents to quickly and efficiently access relevant information, thereby improving response quality and reducing unnecessary retrieval rounds. Additionally, it helps to navigate complex databases like experts do, using strong priors about terminology and potential evidence, rather than merely searching as a newcomer would. This results in improved recall, reduced latency, and more interpretable responses.",
+    "top1_score": 0.8128782,
+    "latency_ms": 25378.31950187683,
+    "action_correct": true
+  },
+  {
+    "id": "E04",
+    "query": "Summarize recent progress in reinforcement learning from human feedback.",
+    "expected_action": "RETRIEVE",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should retrieve RLHF-related papers and summarize key methods like PPO, reward modeling.",
+    "answer": "Based on the provided corpus, I found no specific papers or mention of \"reinforcement learning from human feedback.\" However, a general overview can be offered.\n\nWhile none of the provided papers focus specifically on reinforcement learning from human feedback, several general trends in RL can be inferred:\n\n1. **Improved sample efficiency**: Several papers present methods that aim to improve the efficiency and robustness of reinforcement learning. For example, StraTA (paper [3]) uses strategic trajectory abstraction to improve sample efficiency and final performance.\n2. **Incorporating domain knowledge**: Some papers, such as Operator-Guided Invariance Learning for Continuous Reinforcement Learning (paper [4]), focus on discovering and leveraging domain knowledge to improve learning.\n3. **Coordination and cooperative RL**: The paper Coordination Matters: Evaluation of Cooperative Multi-Agent Reinforcement Learning (paper [5]) explores the evaluation of coordination in cooperative multi-agent RL, highlighting the importance of process-level diagnostics beyond aggregate outcomes.\n\nThese trends suggest active research in designing more efficient and effective reinforcement learning algorithms, but do not specifically address reinforcement learning from human feedback.\n\nHowever, if we were to infer from a broader context, reinforcement learning from human feedback is an active area of research, with recent progress in areas such as:\n\n- Imitation learning\n- Preference-based reinforcement learning\n- Human-AI collaboration\n- Learning from rewards\n\nThese areas involve learning from human feedback to improve reinforcement learning agents. However, specific details on recent progress in human feedback-based RL cannot be inferred directly from the provided corpus.",
+    "top1_score": 0.7604127,
+    "latency_ms": 22516.81089401245,
+    "action_correct": true
+  },
+  {
+    "id": "E05",
+    "query": "What techniques are used for efficient fine-tuning of large language models?",
+    "expected_action": "RETRIEVE",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should retrieve papers on LoRA, adapter methods, prefix tuning and summarize them.",
+    "answer": "Based on the context, the techniques used for efficient fine-tuning of large language models mentioned in the papers are:\n\n- Full fine-tuning with the same optimizer as pretraining, also known as \"optimizer-model consistency\" (Optimizer-Model Consistency paper).\n- Self-distillation (UniSD paper).\n- Curriculum-based training (Can RL Teach Long-Horizon Reasoning to LLMs? Expressiveness Is Key paper).\n- The use of verifiers for problem generation to improve the quality and difficulty of problems (Verifier-Backed Hard Problem Generation for Mathematical Reasoning paper).\n \nThese techniques aim to improve the learning efficiency and effectiveness of large language models during the fine-tuning stage.",
+    "top1_score": 0.85040826,
+    "latency_ms": 24674.338579177856,
+    "action_correct": true
+  },
+  {
+    "id": "E06",
+    "query": "How do diffusion models generate images?",
+    "expected_action": "RETRIEVE",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should retrieve diffusion model papers and explain the forward/reverse diffusion process.",
+    "answer": "Based on the context from corpus, specifically from paper [1] Title: Continuous Latent Diffusion Language Model, and paper [3] Title: ActCam: Zero-Shot Joint Camera and 3D Motion Control for Video Generation, diffusion models generate images through a process that involves:\n\n1. Conditioning on a scene depth and character pose.\n2. Using a pretrained image-to-video diffusion model.\n3. First, learning a stable text-to-latent mapping with a Text VAE.\n4. Then, modeling a global semantic prior in continuous latent space with a block-causal DiT.\n5. Finally, generating text through conditional decoding, or for ActCam, generating pose and depth conditions that remain geometrically consistent across frames.\n\nThis approach allows for fine-grained control over both performance and cinematography, enabling per-frame control of intrinsic and extrinsic camera parameters.",
+    "top1_score": 0.7070229,
+    "latency_ms": 23244.089365005493,
+    "action_correct": true
+  },
+  {
+    "id": "E07",
+    "query": "What evaluation metrics are commonly used for machine translation?",
+    "expected_action": "RETRIEVE",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should retrieve NLP papers and mention BLEU, METEOR, chrF, BERTScore.",
+    "answer": "The provided context does not explicitly mention machine translation. However, [1] \"Are We Making Progress in Multimodal Domain Generalization?\" mentions action recognition and sentiment analysis as part of the tasks studied. \n\nIn the field of machine translation, some commonly used evaluation metrics include BLEU, ROUGE, METEOR, and TER.",
+    "top1_score": 0.6710769,
+    "latency_ms": 23857.489824295044,
+    "action_correct": true
+  },
+  {
+    "id": "E08",
+    "query": "What did they find about the attention mechanism?",
+    "expected_action": "CLARIFY",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should ask for clarification \u2014 'they' is unresolvable. Should ask which paper or authors.",
+    "answer": "According to the first paper \"The Structural Origin of Attention Sink: Variance Discrepancy, Super Neurons, and Dimension Disparity\", the authors found that the structural origin of the attention sink phenomenon in Large Language Models lies in the value aggregation process inherent in self-attention, which induces a systematic variance discrepancy. They also demonstrate that this discrepancy is drastically amplified by the activation of super neurons within Feed-Forward Network (FFN) layers, leading to a dimension disparity of the first-token representation, resulting in the formation of attention sinks as a structural anchor.",
+    "top1_score": 0.78143334,
+    "latency_ms": 25489.53652381897,
+    "action_correct": false
+  },
+  {
+    "id": "E09",
+    "query": "Tell me more about that approach.",
+    "expected_action": "CLARIFY",
+    "actual_action": "RETRIEVE",
+    "expected_behavior": "Should ask which approach \u2014 'that approach' has no referent in an empty history.",
+    "answer": "Based on the given context, I assume that you are referring to the approach proposed in paper 5, \"Patch-Effect Graph Kernels for LLM Interpretability\". \n\nThis approach reframes mechanistic analysis of transformer computations as a graph machine-learning problem. Specifically, it represents activation-patching profiles as patch-effect graphs over model components. The authors introduce three graph-construction methods and apply graph kernels to analyze the resulting structures.\n\nThey evaluate this approach on GPT-2 Small using Indirect Object Identification (IOI) and related tasks, demonstrating that patch-effect graphs preserve discriminative structural signals, and that localized edge-slot features provide higher classification accuracy than global graph-shape descriptors.\n\nOverall, this approach provides a novel framework for interpreting transformer-based models by analyzing the structural signals and causal relationships between different model components.",
+    "top1_score": 0.78110826,
+    "latency_ms": 23230.83233833313,
+    "action_correct": false
+  },
+  {
+    "id": "E10",
+    "query": "What is the best recipe for chocolate chip cookies?",
+    "expected_action": "REFUSE",
+    "actual_action": "REFUSE",
+    "expected_behavior": "Should refuse \u2014 completely outside the AI/ML research domain.",
+    "answer": "I can only answer questions about AI/ML research papers in my corpus. Your question appears to be outside that domain. Try asking about topics like neural networks, transformers, reinforcement learning, computer vision, or NLP research.",
+    "top1_score": 0.48638135,
+    "latency_ms": 4311.057329177856,
+    "action_correct": true
+  }
+]
