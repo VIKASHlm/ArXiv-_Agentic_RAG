@@ -1,7 +1,7 @@
 from typing import TypedDict, Literal
 
 
-Action = Literal["RETRIEVE", "CLARIFY", "REFUSE", "ANSWER_FROM_MEMORY"]
+Action = Literal["RETRIEVE", "CLARIFY", "REFUSE", "ANSWER_FROM_MEMORY", "TOOL"]
 
 
 class AgentState(TypedDict):
@@ -18,6 +18,9 @@ class AgentState(TypedDict):
     chunks: list[dict]
     hypothesis: str              # HyDE hypothesis for logging
     context: str                 # formatted context string
+
+    # Tool outputs
+    tool_result: str             # raw arXiv search results
 
     # Final output
     answer: str

@@ -1,14 +1,16 @@
 """
-LangGraph nodes: router → retrieve → generate
+LangGraph nodes: router → retrieve / tool → generate
 
-Router: one structured-output LLM call deciding RETRIEVE / CLARIFY / REFUSE / ANSWER_FROM_MEMORY
+Router: one structured-output LLM call deciding RETRIEVE / TOOL / CLARIFY / REFUSE / ANSWER_FROM_MEMORY
 Retrieve: HyDE retrieval from Qdrant
+Tool: live arXiv API search (fires when corpus confidence is low)
 Generate: answer synthesis with hedging on low confidence
 """
 
 import json
 import time
 
+import arxiv
 from groq import Groq
 
 from src.agent.state import AgentState
@@ -53,19 +55,48 @@ def _is_self_contained(query: str) -> bool:
 
 
 def _domain_match(query: str) -> bool:
-    """Heuristic: is the query clearly outside the AI/ML research domain?"""
-    # Only refuse if it contains explicit out-of-domain signals
+    """Heuristic: only refuse on explicit out-of-domain signals."""
     out_of_domain = [
         "recipe", "cook", "food", "restaurant", "movie", "sport", "weather",
         "stock", "price", "celebrity", "song", "music", "game", "travel",
         "hotel", "flight", "shopping", "fashion", "fitness", "workout",
     ]
     q = query.lower()
-    # If clearly out of domain, refuse
     if any(k in q for k in out_of_domain):
         return False
-    # Short/vague queries pass through — let self-contained check handle them
     return True
+
+
+# ── Tool: arXiv live search ───────────────────────────────────────────────────
+
+def arxiv_search(query: str, max_results: int = 3) -> str:
+    """
+    Search arXiv live for papers matching the query.
+    Returns a formatted string of titles + abstracts (first 300 chars).
+    Used when corpus confidence is too low to answer reliably.
+    """
+    try:
+        client = arxiv.Client()
+        search = arxiv.Search(
+            query=query,
+            max_results=max_results,
+            sort_by=arxiv.SortCriterion.Relevance,
+        )
+        results = list(client.results(search))
+        if not results:
+            return "No results found on arXiv for this query."
+
+        parts = []
+        for r in results:
+            parts.append(
+                f"Title: {r.title}\n"
+                f"Published: {r.published.strftime('%Y-%m-%d')}\n"
+                f"Abstract: {r.summary[:300].replace(chr(10), ' ')}...\n"
+                f"URL: {r.entry_id}"
+            )
+        return "\n\n".join(parts)
+    except Exception as e:
+        return f"arXiv search failed: {str(e)}"
 
 
 # ── Node: Router ──────────────────────────────────────────────────────────────
@@ -75,24 +106,25 @@ You are a routing agent for an AI research paper QA system.
 Given a user query and context signals, decide what action to take.
 
 Output ONLY valid JSON with exactly these keys:
-  "action": one of RETRIEVE | CLARIFY | REFUSE | ANSWER_FROM_MEMORY
+  "action": one of RETRIEVE | TOOL | CLARIFY | REFUSE | ANSWER_FROM_MEMORY
   "reasoning": one sentence explaining your choice
 
 Rules (apply in order):
 1. If domain_match is false → REFUSE
-2. ANSWER_FROM_MEMORY only if history contains 2+ turns AND the exact answer is already stated in the history. If history is empty or has fewer than 2 turns, never use ANSWER_FROM_MEMORY.
+2. ANSWER_FROM_MEMORY only if history has 2+ turns AND the exact answer is already stated. Never use if history is empty.
 3. If is_self_contained is false AND clarify_count == 0 → CLARIFY
-4. If is_self_contained is false AND clarify_count >= 1 → RETRIEVE
-5. If top1_score < clarify_threshold AND clarify_count == 0 → CLARIFY
+4. If is_self_contained is false AND clarify_count >= 1 → RETRIEVE  (don't ask twice)
+5. If top1_score < clarify_threshold → TOOL  (corpus confidence too low, search arXiv live)
 6. Otherwise → RETRIEVE
 """
+
+
 def router_node(state: AgentState) -> AgentState:
     t0 = time.time()
     query = state["query"]
     history = state.get("history", [])
     clarify_count = state.get("clarify_count", 0)
 
-    # Cheap pre-LLM signals
     from src.retrieval.retriever import get_embedder, get_qdrant
     from src.utils.config import COLLECTION_NAME
 
@@ -151,7 +183,7 @@ def router_node(state: AgentState) -> AgentState:
         action = "RETRIEVE"
         reasoning = f"JSON parse failed, defaulting to RETRIEVE. Raw: {raw[:100]}"
 
-    # Normalize LLM typos and variants
+    # Normalize common LLM typos and variants
     action_map = {
         "RETREIVE": "RETRIEVE",
         "RETREIVAL": "RETRIEVE",
@@ -159,9 +191,11 @@ def router_node(state: AgentState) -> AgentState:
         "CLARIFICATION": "CLARIFY",
         "ANSWER": "ANSWER_FROM_MEMORY",
         "ANSWER_FROM_HISTORY": "ANSWER_FROM_MEMORY",
+        "SEARCH": "TOOL",
+        "ARXIV": "TOOL",
     }
     action = action_map.get(action, action)
-    if action not in {"RETRIEVE", "CLARIFY", "REFUSE", "ANSWER_FROM_MEMORY"}:
+    if action not in {"RETRIEVE", "TOOL", "CLARIFY", "REFUSE", "ANSWER_FROM_MEMORY"}:
         reasoning = f"Unknown action '{action}' normalized to RETRIEVE."
         action = "RETRIEVE"
 
@@ -203,6 +237,31 @@ def retrieve_node(state: AgentState) -> AgentState:
     }
 
 
+# ── Node: Tool ────────────────────────────────────────────────────────────────
+
+def tool_node(state: AgentState) -> AgentState:
+    """
+    Calls the arXiv live search tool when corpus confidence is too low.
+    Results are stored in tool_result and passed to generate_node.
+    """
+    query = state["query"]
+    tool_result = arxiv_search(query)
+
+    log_decision(
+        query=query,
+        action="TOOL_RESULT",
+        reasoning="arXiv live search completed",
+        extra={"tool": "arxiv_search", "result_length": len(tool_result)},
+    )
+
+    return {
+        **state,
+        "tool_result": tool_result,
+        # Set context so generate_node can use it uniformly
+        "context": f"[Live arXiv search results]\n\n{tool_result}",
+    }
+
+
 # ── Node: Generate ────────────────────────────────────────────────────────────
 
 GENERATE_SYSTEM = """\
@@ -210,6 +269,7 @@ You are an expert AI research assistant. Answer questions about AI/ML research p
 
 Guidelines:
 - Answer based only on the provided context.
+- If the context comes from a live arXiv search, mention that the results are from a live search.
 - If the context is weak (score below 0.65), say "Based on limited matches in the corpus..." before answering.
 - If the context contains contradictions, flag them explicitly.
 - If you truly cannot answer from the context, say so clearly — do not hallucinate.
@@ -265,9 +325,9 @@ def generate_node(state: AgentState) -> AgentState:
         answer = resp.choices[0].message.content.strip()
         return {**state, "answer": answer}
 
-    # Standard RETRIEVE path
+    # RETRIEVE and TOOL both land here — context is already set correctly
     confidence_note = ""
-    if top1_score < RETRIEVAL_CONFIDENCE_THRESHOLD:
+    if action == "RETRIEVE" and top1_score < RETRIEVAL_CONFIDENCE_THRESHOLD:
         confidence_note = (
             f"Note: retrieval confidence is low ({top1_score:.2f}). "
             "The answer may be incomplete.\n\n"
@@ -279,7 +339,7 @@ def generate_node(state: AgentState) -> AgentState:
         {
             "role": "user",
             "content": (
-                f"Context from corpus:\n{context}\n\n"
+                f"Context:\n{context}\n\n"
                 f"{confidence_note}"
                 f"Question: {query}"
             ),
